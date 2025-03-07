@@ -1,0 +1,44 @@
+version: "3"
+
+vars:
+  DOPPLER_TOKEN:
+    sh: echo $DOPPLER_TOKEN
+
+env:
+  DOPPLER_TOKEN: '{{.DOPPLER_TOKEN}}'
+
+tasks:
+  download:
+    desc: Install doppler
+    cmds:
+      - platforms: [darwin]
+        cmd: |
+          brew install gnupg
+          brew install dopplerhq/cli/doppler
+      - platforms: [linux]
+        cmd: |
+          sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
+          curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' | sudo gpg --dearmor -o /usr/share/keyrings/doppler-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | sudo tee /etc/apt/sources.list.d/doppler-cli.list
+          sudo apt-get update && sudo apt-get install doppler
+  get-*:
+    desc: Get a Secret from Doppler
+    vars:
+      KEY: '{{index .MATCH 0}}'
+    cmds:
+      - doppler get {{.KEY}}
+
+  set-*-*:
+    desc: Set a Secret in Doppler
+    vars:
+      KEY: '{{index .MATCH 0}}'
+      VALUE: '{{index .MATCH 1}}'
+    cmds:
+      - doppler set {{.KEY}} {{.VALUE}}
+
+  run:
+    desc: Run a command in the Doppler environment
+    requires:
+      vars: [CMD]
+    cmds:
+      - doppler run --command="{{.CMD}}"

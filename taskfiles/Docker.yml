@@ -1,0 +1,43 @@
+version: "3"
+
+vars:
+  REGISTRY: ghcr.io
+  ORG: onsonr
+  COMMIT:
+    sh: git rev-parse HEAD
+  VERSION:
+    sh: git describe --tags --always
+  ROOT_DIR:
+    sh: git rev-parse --show-toplevel
+
+tasks:
+  build:
+    desc: Build a docker image
+    requires:
+      vars: [FILE, NAME]
+    vars:
+      DOCKER_FILE: '{{.ROOT_DIR}}/{{.FILE}}'
+      DOCKER_IMAGE: '{{.REGISTRY}}/{{.ORG}}/{{.IMAGE}}'
+      COMMIT:
+        sh: git rev-parse HEAD
+      VERSION:
+        sh: git describe --tags --always
+    cmds:
+      - docker build -t {{.DOCKER_IMAGE}}:latest -f {{.DOCKER_FILE}} .
+      - task: tag
+        vars:
+          IMAGE: '{{.DOCKER_IMAGE}}'
+          TAGS: latest {{.COMMIT}} {{.VERSION}}
+
+  tag:
+    requires:
+      vars: [IMAGE, TAGS]
+    cmds:
+      - for: { var: TAGS }
+        cmd: docker tag {{.IMAGE}}:latest {{.IMAGE}}:{{.ITEM}}
+
+  push:
+    vars:
+      required: [IMAGE]
+    cmds:
+      - docker push {{.IMAGE}}:latest --all-tags

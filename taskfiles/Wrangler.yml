@@ -1,0 +1,26 @@
+version: "3"
+
+tasks:
+  download:
+    desc: Download and install wrangler
+    preconditions:
+      - sh: command -v bun
+        msg: You must install bun first (task bun:download)
+    cmds:
+      - bun install wrangler --global
+
+  deploy:
+    desc: Deploy to Cloudflare
+    preconditions:
+      - sh: test -f wrangler.toml
+        msg: You must create a wrangler.toml file first
+    cmds:
+      - bunx wrangler deploy
+
+  dev:
+    desc: Run dev server
+    preconditions:
+      - sh: test -f wrangler.toml
+        msg: You must create a wrangler.toml file first
+    cmds:
+      - bunx wrangler dev

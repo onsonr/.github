@@ -1,0 +1,38 @@
+version: "3"
+
+vars:
+  COMMIT:
+    sh: git rev-parse HEAD
+  VERSION:
+    sh: git describe --tags --always
+  COSMOS_SDK: github.com/cosmos/cosmos-sdk/version
+  BUILD_FLAGS: -mod=readonly -trimpath
+  BUILD_TAGS: netgo,ledger
+
+tasks:
+  download:
+    desc: Install go dependencies
+    cmds:
+      - cmd: brew install go
+        platforms: [darwin]
+      - cmd: snap install go --classic
+        platforms: [linux]
+
+  build:
+    desc: Build a Go binary
+    preconditions:
+      - sh: command -v go
+        msg: You must install go first (task go:download)
+    requires:
+      vars: [MAIN, BINARY]
+    vars:
+      TAGS: '-tags "{{.BUILD_TAGS}}"'
+      OUT: '-o ./build/{{.BINARY}}'
+      LD_FLAGS: |
+        -X {{.COSMOS_SDK}}.Name=sonr 
+        -X {{.COSMOS_SDK}}.AppName=sonrd 
+        -X {{.COSMOS_SDK}}.Version={{.VERSION}} 
+        -X {{.COSMOS_SDK}}.Commit={{.COMMIT}} 
+        -X {{.COSMOS_SDK}}.BuildTags={{.BUILD_TAGS}}
+    cmds: 
+      - go build {{.BUILD_FLAGS}} {{.TAGS}} {{.LDFLAGS}} {{.OUT}} {{.MAIN}}

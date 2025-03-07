@@ -1,0 +1,52 @@
+version: '3'
+vars:
+  PROXY: package://pkg.pkl-lang.org/pkl-pantry
+  NAME: org.json_schema.contrib
+  VERSION: 1.1.3
+  PKG: "{{.PROXY}}/{{.NAME}}@{{.VERSION}}#"
+  ROOT_DIR:
+    sh: git rev-parse --show-toplevel
+
+tasks:
+  download:
+    desc: Install go dependencies
+    silent: true
+    vars:
+      DEPS:
+        [
+          "github.com/apple/pkl-go/cmd/pkl-gen-go@latest",
+          "github.com/sqlc-dev/sqlc/cmd/sqlc@latest",
+          "github.com/goreleaser/goreleaser/v2@latest",
+          "github.com/a-h/templ/cmd/templ@latest",
+        ]
+    cmds:
+      - for: { var: DEPS }
+        cmd: gum spin --spinner dot --title "Installing go dependencies..." -- go install {{.ITEM}}
+
+  pkl-*:
+    dir: '{{.ROOT_DIR}}'
+    vars:
+      INPUT: '{{index .MATCH 0}}'
+    cmds:
+      - pkl eval {{.PKG}}/generate.pkl -m . -p source=types/schemas/{{.INPUT}}
+      - mv *.pkl pkl/
+
+  go-*:
+    dir: '{{.ROOT_DIR}}'
+    vars:
+      INPUT: '{{index .MATCH 0}}'
+      GOOUT:
+        sh: echo {{.INPUT}} | sed 's/\.json//'
+      FLAGS: --schema-output=http://json-schema.org/draft-04/schema#=internal/models/{{.GOOUT}}.go --schema-package=http://json-schema.org/draft-04/schema#=github.com/prnk28/gh-pm
+    cmds:
+      - go-jsonschema {{.FLAGS}} -p models types/schemas/{{.INPUT}} > internal/models/{{.GOOUT}}.go
+
+  schemagen-*:
+    dir: '{{.ROOT_DIR}}'
+    vars:
+      INPUT: '{{index .MATCH 0}}'
+      OUTPUT:
+        sh: basename {{.INPUT}}
+    cmds:
+      - mkdir -p types/schemas
+      - json-schema-generator -f types/base/{{.INPUT}} -o types/schemas/{{.OUTPUT}}

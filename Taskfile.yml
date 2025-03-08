@@ -1,18 +1,18 @@
 #
-version: '3'
+version: "3"
 includes:
-  buf: .github/taskfiles/Buf.yml
-  bun: .github/taskfiles/Bun.yml
-  docker: .github/taskfiles/Docker.yml
-  dokku: .github/taskfiles/Dokku.yml
-  doppler: .github/taskfiles/Doppler.yml
-  gh: .github/taskfiles/Gh.yml
-  go: .github/taskfiles/Go.yml
-  goreleaser: .github/taskfiles/Goreleaser.yml
-  log: .github/taskfiles/Log.yml
-  pkl: .github/taskfiles/Pkl.yml
-  templ: .github/taskfiles/Templ.yaml
-  wrangler: .github/taskfiles/Wrangler.yml
+  buf: taskfiles/Buf.yml
+  bun: taskfiles/Bun.yml
+  docker: taskfiles/Docker.yml
+  dokku: taskfiles/Dokku.yml
+  doppler: taskfiles/Doppler.yml
+  gh: taskfiles/Gh.yml
+  go: taskfiles/Go.yml
+  goreleaser: taskfiles/Goreleaser.yml
+  log: taskfiles/Log.yml
+  pkl: taskfiles/Pkl.yml
+  templ: taskfiles/Templ.yaml
+  wrangler: taskfiles/Wrangler.yml
 
 silent: true
 vars:
@@ -21,4 +21,5 @@ vars:
 tasks:
   default:
     cmds:
-      - echo "{{.GREETING}}"
+      - echo "[onsonr] Organization Tasks"
+      - task --list-all
